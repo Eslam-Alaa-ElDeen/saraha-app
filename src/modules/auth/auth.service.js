@@ -1,6 +1,7 @@
 import { SALT } from "../../../config/config.service.js";
 import { ConflictException, NotFoundException } from "../../common/exception/index.js";
 import { create, findOne } from "../../common/repository/index.js";
+import { Decrypt, Encrypt } from "../../common/security/encryption.security.js";
 import { Compare, Hash } from "../../common/security/index.js";
 import { userModel } from "../../DB/model/index.js";
 
@@ -18,7 +19,8 @@ export const signup = async (inputs) => {
     userName,
     email,
     password:await Hash(password,SALT)
-    ,phone,gender,DOB}
+    ,phone:await Encrypt(phone)
+    ,gender,DOB}
 
   })
   return user;
@@ -30,13 +32,10 @@ export const login = async (inputs) => {
     throw NotFoundException({message:"email or password not valid"})
 
   const matchPass=await Compare(inputs.password,user.password);
-  console.log({
-    plainText:inputs.password,
-    cipherText:user.password,
-    match:matchPass
-  });
+
   if(!matchPass)
     throw NotFoundException({message:"email or password not valid"})
-
+  
+  user.phone=await Decrypt(user.phone)
   return user;
 };

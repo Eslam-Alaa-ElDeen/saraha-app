@@ -24,3 +24,5 @@ app.use("{/*dummy}", (req, res) => {
 app.use(globalErrorHandling);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+
