@@ -14,7 +14,7 @@ router.post("/signup", async (req, res, next) => {
 })
 
 router.post("/login", async (req, res, next) => {
-    const result = await login(req.body)
+    const result = await login(req.body,`${req.protocol}://${req.host}`)
 
     successResponse({
         res,

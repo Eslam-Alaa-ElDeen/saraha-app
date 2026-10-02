@@ -1,9 +1,9 @@
 import { SALT } from "../../../config/config.service.js";
 import { ConflictException, NotFoundException } from "../../common/exception/index.js";
 import { create, findOne } from "../../common/repository/index.js";
-import { Decrypt, Encrypt } from "../../common/security/encryption.security.js";
-import { Compare, Hash } from "../../common/security/index.js";
+import { Compare, createToken, Hash,Decrypt, Encrypt } from "../../common/security/index.js";
 import { userModel } from "../../DB/model/index.js";
+import jwt from "jsonwebtoken"
 
 
 export const signup = async (inputs) => {
@@ -26,7 +26,7 @@ export const signup = async (inputs) => {
   return user;
 };
 
-export const login = async (inputs) => {
+export const login = async (inputs,issuer) => {
   const user=await findOne({model:userModel,filter:{email:inputs.email}})
   if(!user)
     throw NotFoundException({message:"email or password not valid"})
@@ -37,5 +37,19 @@ export const login = async (inputs) => {
     throw NotFoundException({message:"email or password not valid"})
   
   user.phone=await Decrypt(user.phone)
-  return user;
+
+      const access_token=await createToken({
+          payload:{
+            user:{
+              sub:user._id
+            }
+          },
+          options:{
+            noTimestamp:false,
+            notBefore:30,
+            expiresIn:60*60,
+            issuer
+          }
+      })
+  return access_token;
 };
