@@ -11,7 +11,7 @@ app.use(express.json());
 connectionDB()
 
 
-app.get("/", (req, res) => res.json({message:"welcome to Eslam 3laa server"}));
+app.get("/", (req, res) => res.json({message:"Welcome to Eslam 3laa server"}));
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
 
@@ -23,6 +23,6 @@ app.use("{/*dummy}", (req, res) => {
 
 app.use(globalErrorHandling);
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(port, () => console.log(`Sara7a app listening on port ${port}!`));
 
 

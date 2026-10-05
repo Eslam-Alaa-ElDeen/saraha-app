@@ -1,4 +1,4 @@
-import { SALT } from "../../../config/config.service.js";
+import { REFRESH_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SIGNATURE, SALT } from "../../../config/config.service.js";
 import { ConflictException, NotFoundException } from "../../common/exception/index.js";
 import { create, findOne } from "../../common/repository/index.js";
 import { Compare, createToken, Hash,Decrypt, Encrypt } from "../../common/security/index.js";
@@ -36,7 +36,7 @@ export const login = async (inputs,issuer) => {
   if(!matchPass)
     throw NotFoundException({message:"email or password not valid"})
   
-  user.phone=await Decrypt(user.phone)
+    user.phone=await Decrypt(user.phone)
 
       const access_token=await createToken({
           payload:{
@@ -46,10 +46,26 @@ export const login = async (inputs,issuer) => {
           },
           options:{
             noTimestamp:false,
-            notBefore:30,
             expiresIn:60*60,
             issuer
           }
       })
-  return access_token;
+
+      const refresh_token=await createToken({
+          payload:{
+            user:{
+              sub:user._id
+            }
+          },
+          secret:REFRESH_TOKEN_SIGNATURE,
+          options:{
+            noTimestamp:false,
+            expiresIn:REFRESH_TOKEN_EXPIRES_IN,
+            issuer
+          }
+      })
+  return {access_token,refresh_token};
 };
+
+
+

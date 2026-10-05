@@ -21,5 +21,8 @@ export const ENCRYPTION_KEY=Buffer.from(process.env.ENCRYPTION_KEY)
 export const IVLENGTH=parseInt(process.env.IVLENGTH)
 
 export const ACCESS_TOKEN_SIGNATURE=process.env.ACCESS_TOKEN_SIGNATURE
-export const ACCESS_TOKEN_EXPIRES_IN=process.env.ACCESS_TOKEN_EXPIRES_IN
+export const ACCESS_TOKEN_EXPIRES_IN=parseInt(process.env.ACCESS_TOKEN_EXPIRES_IN)
+
+export const REFRESH_TOKEN_SIGNATURE=process.env.REFRESH_TOKEN_SIGNATURE
+export const REFRESH_TOKEN_EXPIRES_IN=parseInt(process.env.REFRESH_TOKEN_EXPIRES_IN)
 

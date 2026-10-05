@@ -52,3 +52,13 @@ export const ForbiddenException=({
 }={})=>{
     throw new Error(message,options)
 }
+export const BadRequestException=({
+    message="bad request",
+    options={
+        cause:{
+            status:400
+        }
+    }
+}={})=>{
+    throw new Error(message,options)
+}
