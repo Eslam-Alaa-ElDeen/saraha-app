@@ -17,10 +17,14 @@ export const authentication=(tokenType=TOKEN_TYPE.access)=>{
         const signature=type(tokenType)
         const {authorization}=req.headers
 
-        if(!authorization)
-            throw UnAuthorizedException({message:"UnAuthorized account"})
+        const [key,credential]=authorization.split(" ");
 
-        const payload=await verifyToken({payload:authorization,secret:signature})
+        console.log({key,credential});
+        
+        if(!credential)
+            throw UnAuthorizedException({message:"UnAuthorized account"})
+        
+        const payload=await verifyToken({payload:credential,secret:signature})
         
         if (!payload?.user?.sub) {
             throw BadRequestException({message:"missing token payload"})
