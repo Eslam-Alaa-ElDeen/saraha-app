@@ -1,10 +1,58 @@
-import { REFRESH_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SIGNATURE, SALT } from "../../../config/config.service.js";
-import { ConflictException, NotFoundException } from "../../common/exception/index.js";
+import { OAuth2Client } from "google-auth-library";
+import { REFRESH_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SIGNATURE, SALT, WEB_CLIENT_ID } from "../../../config/config.service.js";
+import { BadRequestException, ConflictException, NotFoundException } from "../../common/exception/index.js";
 import { create, findOne } from "../../common/repository/index.js";
-import { Compare, createToken, Hash,Decrypt, Encrypt } from "../../common/security/index.js";
+import { Compare, createToken, Hash,Decrypt, Encrypt, createLoginCredentials } from "../../common/security/index.js";
 import { userModel } from "../../DB/model/index.js";
 import jwt from "jsonwebtoken"
+import { ProviderEnum } from "../../common/enum/provider.enum.js";
 
+const client=new OAuth2Client();
+
+async function verifyGoogleAccount(idToken){
+  const ticket =await client.verifyIdToken({
+    idToken,
+    audience:WEB_CLIENT_ID
+  })
+
+  const payload=ticket.getPayload();
+  if(!payload.email_verified)
+    throw BadRequestException({message:"email not verified"})
+
+  return payload
+}
+
+
+
+
+export const signupWithGmail = async ({idToken},issuer) => {
+  const {name,email,picture}=await verifyGoogleAccount(idToken)
+
+  const existAccount=await findOne({
+    model:userModel,
+    filter:{email}
+  })
+
+  if(existAccount){
+    if(existAccount.provider!=ProviderEnum.GOOGLE)
+      throw ConflictException({message:"Invalid account"})
+
+    return{status:200,tokens: await createLoginCredentials({user:existAccount,issuer})};
+  }
+
+  const user=await create({
+    model:userModel,
+    data:{
+      userName:name,
+      email,
+      confirmEmail:new Date(),
+      provider:ProviderEnum.GOOGLE,
+      image:picture
+    }
+  })
+
+    return{status:201,tokens: await createLoginCredentials({user,issuer})};
+};
 
 export const signup = async (inputs) => {
   const existEmail=await findOne({model:userModel,filter:{email:inputs.email}})
@@ -25,6 +73,7 @@ export const signup = async (inputs) => {
   })
   return user;
 };
+
 
 export const login = async (inputs,issuer) => {
   const user=await findOne({model:userModel,filter:{email:inputs.email}})

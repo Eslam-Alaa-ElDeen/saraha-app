@@ -12,11 +12,11 @@ export const decodeToken=async({payload={}}={})=>{
     return await jwt.decode(payload)
 }
 
-export const createLoginCredentials=async({payload={},issuer="",options={}})=>{
+export const createLoginCredentials=async({user={},issuer="",options={}})=>{
         const access_token=await createToken({
             payload:{
                 user:{
-                    sub:payload.user.sub
+                    sub:user._id
                 }
             },
             options:{
@@ -30,7 +30,7 @@ export const createLoginCredentials=async({payload={},issuer="",options={}})=>{
         const refresh_token=await createToken({
             payload:{
                 user:{
-                sub:payload.user.sub
+                sub:user._id
                 }
             },
             secret:REFRESH_TOKEN_SIGNATURE,

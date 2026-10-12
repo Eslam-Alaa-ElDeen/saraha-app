@@ -9,7 +9,6 @@ export const profile = async(user) => {
     return {
         name:user.userName,
         email:user.email,
-        phone:await Decrypt(user.phone),
         gender:function(g=user.gender){
             if (g==0) {
                 return 'male'
@@ -23,9 +22,9 @@ export const profile = async(user) => {
 export const rotate=async(payload,user,issuer)=>{
 
     const accessExpiresIn=(payload.iat+parseInt(ACCESS_TOKEN_EXPIRES_IN))*1000
-    const currentTime=Date.now()+(50*60000);
+    const currentTime=Date.now()+(5*6000);
 
     if(currentTime< accessExpiresIn)
         throw ConflictException({message:"sorry we cannot create new login credentials while current access token still within valid time range"})
-    return await createLoginCredentials({payload,issuer})
+    return await createLoginCredentials({user,issuer})
 }

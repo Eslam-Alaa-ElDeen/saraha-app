@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import {  login, signup } from './auth.service.js';
+import {  login, signup, signupWithGmail } from './auth.service.js';
 import { successResponse } from '../../common/utils/response/success.response.js';
 const router = Router();
 
@@ -11,6 +11,20 @@ router.post("/signup", async (req, res, next) => {
         data:result,
         message:"user inserted successfully"
     })
+})
+router.post("/signup-with-gmail", async (req, res, next) => {
+    try {
+        const {status,tokens} = await signupWithGmail(req.body,`${req.protocol}://${req.host}`)
+        successResponse({
+            res,
+            status,
+            data:tokens,
+            message:"user inserted successfully"
+        })
+    } catch (error) {
+        res.json(error.message)
+    }
+
 })
 
 router.post("/login", async (req, res, next) => {
