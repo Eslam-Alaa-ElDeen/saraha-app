@@ -3,9 +3,10 @@ import { Router } from "express";
 import {successResponse} from"../../common/utils/response/index.js"
 import { authentication } from "../../middleware/index.js";
 import { TOKEN_TYPE } from "../../common/enum/token.enum.js";
+import { authorization } from "../../middleware/authorization.middleware.js";
 const router = Router();
 
-router.get("/profile",authentication(TOKEN_TYPE.access), async(req, res, next) => {
+router.get("/profile",authentication(TOKEN_TYPE.access),authorization(0), async(req, res, next) => {
   const result = await profile(req.user);
   
   successResponse({
