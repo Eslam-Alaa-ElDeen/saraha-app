@@ -56,8 +56,9 @@ export const BadRequestException=({
     message="bad request",
     options={
         cause:{
-            status:400
-        }
+            status:400,
+        },
+        extra:undefined
     }
 }={})=>{
     throw new Error(message,options)

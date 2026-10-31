@@ -40,6 +40,5 @@ export const authentication=(tokenType=TOKEN_TYPE.access)=>{
         req.user=user;
         req.payload=payload
         next();
-
     }
 }

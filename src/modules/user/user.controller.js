@@ -28,4 +28,7 @@ router.post("/rotate-token",authentication(TOKEN_TYPE.refresh), async(req, res, 
     data:result
   })
 });
+
+
+
 export default router;
