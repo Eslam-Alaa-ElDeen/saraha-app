@@ -20,7 +20,7 @@ router.post("/signup", Validation(signupSchema), async (req, res, next) => {
         data:result,
         message:"user inserted successfully"
     })
-})
+}) 
 router.post("/signup-with-gmail", Validation(signupWithGmailSchema), async (req, res, next) => {
     try {
         const {status,tokens} = await signupWithGmail(req.body,`${req.protocol}://${req.host}`)
@@ -46,6 +46,8 @@ router.post("/login", Validation(loginSchema), async (req, res, next) => {
         message:"user logged in successfully"
     })
 })
+
+
 
 
 

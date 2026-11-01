@@ -1,4 +1,4 @@
-import { profile, rotate } from "./user.service.js";
+import { logout, profile, rotate } from "./user.service.js";
 import { Router } from "express";
 import {successResponse} from"../../common/utils/response/index.js"
 import { authentication } from "../../middleware/index.js";
@@ -28,6 +28,18 @@ router.post("/rotate-token",authentication(TOKEN_TYPE.refresh), async(req, res, 
     data:result
   })
 });
+
+
+router.post("/logout",authentication(TOKEN_TYPE.access), async (req, res, next) => {
+    const result = await logout(req.user,req.payload,req.body)
+
+    successResponse({
+        res,
+        status:201,
+        data:result,
+        message:"user logout successfully"
+    })
+})
 
 
 

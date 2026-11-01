@@ -4,8 +4,8 @@ import { BadRequestException, ConflictException, NotFoundException } from "../..
 import { create, findOne } from "../../common/repository/index.js";
 import { Compare, createToken, Hash,Decrypt, Encrypt, createLoginCredentials } from "../../common/security/index.js";
 import { userModel } from "../../DB/model/index.js";
-import jwt from "jsonwebtoken"
 import { ProviderEnum } from "../../common/enum/provider.enum.js";
+import {randomUUID}from "node:crypto"
 
 const client=new OAuth2Client();
 
@@ -21,8 +21,6 @@ async function verifyGoogleAccount(idToken){
 
   return payload
 }
-
-
 
 
 export const signupWithGmail = async ({idToken},issuer) => {
@@ -86,7 +84,7 @@ export const login = async (inputs,issuer) => {
     throw NotFoundException({message:"email or password not valid"})
   
     user.phone=await Decrypt(user.phone)
-
+    const jwtid=randomUUID();
       const access_token=await createToken({
           payload:{
             user:{
@@ -96,7 +94,8 @@ export const login = async (inputs,issuer) => {
           options:{
             noTimestamp:false,
             expiresIn:60*60,
-            issuer
+            issuer,
+            jwtid
           }
       })
 
@@ -110,11 +109,15 @@ export const login = async (inputs,issuer) => {
           options:{
             noTimestamp:false,
             expiresIn:REFRESH_TOKEN_EXPIRES_IN,
-            issuer
+            issuer,
+            jwtid
           }
       })
   return {access_token,refresh_token};
 };
+
+
+
 
 
 

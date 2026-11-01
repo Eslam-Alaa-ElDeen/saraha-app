@@ -47,7 +47,8 @@ const userSchema=new mongoose.Schema({
         type:Number,
         enum:Object.values(ProviderEnum),
         default:ProviderEnum.SYSTEM
-    }
+    },
+    changeCredentialTime:Date
 },{
     timestamps:true,
     toObject:{virtuals:true},

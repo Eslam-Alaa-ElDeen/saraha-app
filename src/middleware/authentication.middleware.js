@@ -2,7 +2,8 @@ import { ACCESS_TOKEN_SIGNATURE, REFRESH_TOKEN_SIGNATURE } from "../../config/co
 import { TOKEN_TYPE } from "../common/enum/token.enum.js"
 import { BadRequestException, NotFoundException, UnAuthorizedException } from "../common/exception/index.js"
 import { findById } from "../common/repository/index.js"
-import { verifyToken } from "../common/security/index.js"
+import { revokeTokenKey, verifyToken } from "../common/security/index.js"
+import { getValue, ttl } from "../common/services/cache.service.js"
 import { userModel } from "../DB/model/index.js"
 
 const type=(tokenType)=>{
@@ -19,8 +20,6 @@ export const authentication=(tokenType=TOKEN_TYPE.access)=>{
 
         const [key,credential]=authorization.split(" ");
 
-        console.log({key,credential});
-        
         if(!credential)
             throw UnAuthorizedException({message:"UnAuthorized account"})
         
@@ -36,6 +35,12 @@ export const authentication=(tokenType=TOKEN_TYPE.access)=>{
 
         if(!user)
             throw NotFoundException({message:"invalid account"})
+
+        if(await getValue(revokeTokenKey(payload)))
+            throw UnAuthorizedException({message:"you are logged out pls login again"})
+
+        if(user?.changeCredentialTime?.getTime()>(payload.iat*1000))
+            throw UnAuthorizedException({message:"you are logged out pls login again"})
 
         req.user=user;
         req.payload=payload

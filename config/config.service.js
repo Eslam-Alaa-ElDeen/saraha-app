@@ -27,3 +27,4 @@ export const REFRESH_TOKEN_SIGNATURE=process.env.REFRESH_TOKEN_SIGNATURE
 export const REFRESH_TOKEN_EXPIRES_IN=parseInt(process.env.REFRESH_TOKEN_EXPIRES_IN)
 
 export const WEB_CLIENT_ID=process.env.WEB_CLIENT_ID;
+export const REDIS_URI=process.env.REDIS_URI;

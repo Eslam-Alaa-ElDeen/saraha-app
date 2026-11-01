@@ -4,13 +4,17 @@ import { globalErrorHandling } from "./middleware/index.js";
 import { authRouter, userRouter } from "./modules/index.js";
 import express from "express";
 import cors from "cors"
+import { client, connectRedis } from "./DB/redis.connection.js";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors())
 
-connectionDB()
+await connectionDB()
+await connectRedis()
+
+
 
 
 app.get("/", (req, res) => res.json({message:"Welcome to Eslam 3laa server"}));
