@@ -51,3 +51,47 @@ export const signupWithGmailSchema = {
         .label("Request body")
         .messages(requestBodyMessages)
 };
+
+export const confirmEmailSchema = {
+    body: joi.object({
+        email: generalRules.email.required(),
+        otp:joi.string().length(6).required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+
+export const resendOTPSchema = {
+    body: joi.object({
+        otp:joi.string().length(6).required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+
+export const forgetPasswordSendOTPSchema = {
+    body: joi.object({
+        email: generalRules.email.required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+
+export const updatePasswordVerifyOTPSchema = {
+    body: joi.object({
+        email: generalRules.email.required(),
+        otp:joi.string().length(6).required(),
+        newPassword:generalRules.password.required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+

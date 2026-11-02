@@ -1,13 +1,54 @@
 import { OAuth2Client } from "google-auth-library";
 import { REFRESH_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SIGNATURE, SALT, WEB_CLIENT_ID } from "../../../config/config.service.js";
-import { BadRequestException, ConflictException, NotFoundException } from "../../common/exception/index.js";
+import { BadRequestException, ConflictException, NotFoundException, TooManyRequestException } from "../../common/exception/index.js";
 import { create, findOne } from "../../common/repository/index.js";
-import { Compare, createToken, Hash,Decrypt, Encrypt, createLoginCredentials } from "../../common/security/index.js";
+import { Compare, createToken, Hash,Decrypt, Encrypt, createLoginCredentials, userBaseRevokeTokenKey } from "../../common/security/index.js";
 import { userModel } from "../../DB/model/index.js";
 import { ProviderEnum } from "../../common/enum/provider.enum.js";
 import {randomUUID}from "node:crypto"
+import { createOTP, otp_key, otp_key_prefix, otp_key_trails } from "../../common/utils/email/otp.js";
+import { eventEmitterEmail } from "../../common/events/event.email.js";
+import { sendEmail } from "../../common/utils/email/sendEmail.js";
+import { emailTemplate } from "../../common/utils/email/email.template.js";
+import { deleteKey, expire, getValue, incr, keys, setValue, ttl } from "../../common/services/cache.service.js";
 
 const client=new OAuth2Client();
+
+const sendEmailOTP=async(email)=>{
+
+  const ttlExist=await ttl(otp_key(email))
+  if(ttlExist>0)
+    throw ConflictException({message:`the old OTP is active to use ,you can resend a new OTP after ${ttlExist}`})
+
+  const trails=await getValue(otp_key_trails(email))
+  if(trails>=3)
+    throw TooManyRequestException({message:"You have made too many requests ,you blocked for 5 min"})
+
+  const otp=createOTP()
+  await setValue({
+    key:otp_key(email),
+    value:await Hash(otp,SALT),
+    ttl:300
+  })
+
+  const currTrails=await incr(otp_key_trails(email))
+  if (currTrails === 1) {
+      await expire({
+          key: otp_key_trails(email),
+          ttl: 300
+      });
+  }
+
+  if (currTrails === 3) {
+      await expire({
+          key: otp_key_trails(email),
+          ttl: 300
+      });
+  }
+
+  eventEmitterEmail.emit("confirm_email", { email, otp });
+  return
+}
 
 async function verifyGoogleAccount(idToken){
   const ticket =await client.verifyIdToken({
@@ -56,7 +97,9 @@ export const signup = async (inputs) => {
   const existEmail=await findOne({model:userModel,filter:{email:inputs.email}})
   if(existEmail)
     throw ConflictException({message:"email already exist go to login"})
-  
+
+  await sendEmailOTP(inputs.email)
+
   inputs.email=inputs.email.toLowerCase()
   const {userName,email,password,phone,gender,DOB}=inputs;
   const user=await create({
@@ -115,6 +158,92 @@ export const login = async (inputs,issuer) => {
       })
   return {access_token,refresh_token};
 };
+
+export const confirmEmail=async({email,otp})=>{
+  const user=await findOne({
+    model:userModel,
+    filter:{
+      email,provider:ProviderEnum.SYSTEM,confirmEmail:{$exists:false}
+    }
+  })
+
+  if(!user)
+    throw BadRequestException({message:"the user not exists or already confirmed"})
+
+  const cipherOTP=await getValue(otp_key(email))
+
+  if(cipherOTP==null || !await Compare(otp,cipherOTP))
+    throw BadRequestException({message:"OTP is wrong or expired"})
+
+  await deleteKey(await keys(`${otp_key_prefix(email)}`));
+
+  user.confirmEmail=Date.now();
+  await user.save();
+  return
+}
+
+export const resendOTP=async({email})=>{
+  const user=await findOne({
+    model:userModel,
+    filter:{
+      email,provider:ProviderEnum.SYSTEM,confirmEmail:{$exists:false}
+    }
+  })
+
+  if(!user)
+    throw BadRequestException({message:"the user not exists or already confirmed"})
+
+  await sendEmailOTP(email)
+}
+
+export const forgetPasswordSendOTP=async({email})=>{
+  const user=await findOne({
+    model:userModel,
+    filter:{
+      email,provider:ProviderEnum.SYSTEM,confirmEmail:{$exists:true}
+    }
+  })
+
+  if(!user)
+    throw BadRequestException({message:"the user not exists"})
+
+  await sendEmailOTP(email)
+}
+
+export const updatePasswordVerifyOTP=async({email,otp,newPassword})=>{
+  const user=await findOne({
+    model:userModel,
+    filter:{
+      email,provider:ProviderEnum.SYSTEM,confirmEmail:{$exists:true}
+    }
+  })
+
+  if(!user)
+    throw BadRequestException({message:"User not exists"})
+
+  const cipherOTP=await getValue(otp_key(email))
+
+  if(cipherOTP==null || !await Compare(otp,cipherOTP))
+    throw BadRequestException({message:"OTP is wrong or expired"})
+
+  user.password=await Hash(newPassword,SALT)
+  user.changeCredentialTime=Date.now()
+  await user.save()
+
+  const payload={
+    user:{
+      sub:user._id
+    }
+  }
+  //delete the keys from redis(revoke token and send otp)
+  const foundKeys=await Promise.all([
+      keys(userBaseRevokeTokenKey(payload)),
+      keys(`${otp_key_prefix(email)}`)
+  ])
+
+  await deleteKey([...foundKeys[0],...foundKeys[1]])
+  return;
+}
 
 
 

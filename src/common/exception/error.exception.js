@@ -63,3 +63,15 @@ export const BadRequestException=({
 }={})=>{
     throw new Error(message,options)
 }
+
+export const TooManyRequestException=({
+    message="bad request",
+    options={
+        cause:{
+            status:429,
+        },
+        extra:undefined
+    }
+}={})=>{
+    throw new Error(message,options)
+}

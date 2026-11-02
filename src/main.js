@@ -4,7 +4,7 @@ import { globalErrorHandling } from "./middleware/index.js";
 import { authRouter, userRouter } from "./modules/index.js";
 import express from "express";
 import cors from "cors"
-import { client, connectRedis } from "./DB/redis.connection.js";
+import {  connectRedis } from "./DB/redis.connection.js";
 
 const app = express();
 

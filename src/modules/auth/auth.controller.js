@@ -1,11 +1,15 @@
 import { Router } from 'express'
-import {  login, signup, signupWithGmail } from './auth.service.js';
+import {  confirmEmail, forgetPasswordSendOTP, login, resendOTP, signup, signupWithGmail, updatePasswordVerifyOTP } from './auth.service.js';
 import { successResponse } from '../../common/utils/response/success.response.js';
 import { Validation } from "../../middleware/validation.middleware.js";
 import {
+    confirmEmailSchema,
+    forgetPasswordSendOTPSchema,
     loginSchema,
+    resendOTPSchema,
     signupSchema,
-    signupWithGmailSchema
+    signupWithGmailSchema,
+    updatePasswordVerifyOTPSchema
 } from "./auth.validation.js";
 const router = Router();
 
@@ -47,8 +51,48 @@ router.post("/login", Validation(loginSchema), async (req, res, next) => {
     })
 })
 
+router.patch("/confirm_otp",Validation(confirmEmailSchema), async (req, res, next) => {
+    const result = await confirmEmail(req.body)
 
+    successResponse({
+        res,
+        status:201,
+        data:result,
+        message:"email confirmed successfully"
+    })
+})
 
+router.post("/resend_otp", Validation(resendOTPSchema),async (req, res, next) => {
+    const result = await resendOTP(req.body)
 
+    successResponse({
+        res,
+        status:201,
+        data:result,
+        message:"otp resend successfully"
+    })
+})
+
+router.post("/forget_password_send_otp",Validation(forgetPasswordSendOTPSchema),async(req,res,next)=>{
+    const result = await forgetPasswordSendOTP(req.body)
+
+    successResponse({
+        res,
+        status:201,
+        data:result,
+        message:"send otp successfully"
+    })
+})
+
+router.patch("/update_password",Validation(updatePasswordVerifyOTPSchema),async(req,res,next)=>{
+    const result = await updatePasswordVerifyOTP(req.body)
+
+    successResponse({
+        res,
+        status:201,
+        data:result,
+        message:"password updated successfully"
+    })
+})
 
 export default router
