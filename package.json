@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start:dev": "cross-env NODE_ENV=development  node --watch-path=. ./src/main.js",
+    "start": "cross-env NODE_ENV=development  node  ./src/main.js",
     "start:prod": "cross-env NODE_ENV=production  node  ./src/main.js"
   },
   "keywords": [],
@@ -17,10 +18,12 @@
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "file-type": "^22.3.0",
     "google-auth-library": "^11.2.0",
     "joi": "^18.3.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.2",
+    "multer": "^2.5.0",
     "nodemailer": "^10.3.1",
     "redis": "^6.3.1"
   }

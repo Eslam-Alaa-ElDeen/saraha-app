@@ -18,6 +18,7 @@ await connectRedis()
 
 
 app.get("/", (req, res) => res.json({message:"Welcome to Eslam 3laa server"}));
+app.use("/uploads",express.static("./uploads"))
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
 

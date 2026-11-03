@@ -47,3 +47,10 @@ export const logout=async(user,payload,{actions=LogoutTypeEnum.ONE})=>{
             break;
     }
 }
+
+export const uploadProfilePhoto=async(file,user)=>{
+    user.image=file.finalPath
+    await user.save()
+
+    return user;
+}
