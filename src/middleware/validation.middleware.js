@@ -4,7 +4,7 @@ export const Validation = (schema) => {
     return (req, res, next) => {
         const arrError = [];
         for (const key of Object.keys(schema)) {
-            const { error, value } = schema[key].validate(req[key], {
+            const { error } = schema[key].validate(req[key], {
                 abortEarly: false,
                 convert: true
             });
@@ -17,8 +17,6 @@ export const Validation = (schema) => {
                         key
                     });
                 });
-            } else {
-                req[key] = value;
             }
         }
 

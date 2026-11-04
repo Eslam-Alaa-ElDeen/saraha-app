@@ -49,6 +49,10 @@ export const generalRules = {
         path: joi.string(),
         destination: joi.string(),
         filename: joi.string(),
+        buffer: joi.binary(),
+        finalPath: joi.string().required().messages({
+            "any.required": "Final file path is required."
+        }),
         size: joi.number().positive().required().messages({
             "number.base": "File size must be a number.",
             "number.positive": "File must not be empty.",

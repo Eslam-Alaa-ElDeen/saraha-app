@@ -1,7 +1,7 @@
 import { port } from "../config/config.service.js";
 import { connectionDB } from "./DB/connection.db.js";
 import { globalErrorHandling } from "./middleware/index.js";
-import { authRouter, userRouter } from "./modules/index.js";
+import { authRouter, messageRouter, userRouter } from "./modules/index.js";
 import express from "express";
 import cors from "cors"
 import {  connectRedis } from "./DB/redis.connection.js";
@@ -21,6 +21,7 @@ app.get("/", (req, res) => res.json({message:"Welcome to Eslam 3laa server"}));
 app.use("/uploads",express.static("./uploads"))
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
+app.use("/message", messageRouter);
 
 
 app.use("{/*dummy}", (req, res) => {

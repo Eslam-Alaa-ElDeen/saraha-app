@@ -76,7 +76,6 @@ export const processMulterUpload=async({req,validation=[],customPath='general'}=
             })
             req.filePath = req.file.finalPath;
         }else if(Array.isArray(req.files)){
-            console.log(req.files);
             const returnedFiles=await processFiles({
                 validation,
                 customPath,
