@@ -5,6 +5,7 @@ import { authRouter, messageRouter, userRouter } from "./modules/index.js";
 import express from "express";
 import cors from "cors"
 import {  connectRedis } from "./DB/redis.connection.js";
+import helmet from "helmet";
 
 let corsOptions = {
   origin: function (origin, callback) {
@@ -20,6 +21,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors(corsOptions));
+app.use(helmet())
 
 await connectionDB()
 await connectRedis()

@@ -5,7 +5,11 @@ import { authentication, authorization, uploadMiddleware } from "../../middlewar
 import { TOKEN_TYPE } from "../../common/enum/token.enum.js";
 import { RoleEnum } from "../../common/enum/role.enum.js";
 import { fileTypeValidation, localFileUpload } from "../../common/utils/multer/local.multer.js";
-const router = Router();
+const router = Router({
+    caseSensitive: true,
+    strict: true,
+    mergeParams: true
+});
 
 router.get("/profile",authentication(TOKEN_TYPE.access),authorization([RoleEnum.ADMIN,RoleEnum.USER]), async(req, res, next) => {
   const result = await profile(req.user);

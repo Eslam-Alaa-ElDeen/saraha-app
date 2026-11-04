@@ -11,7 +11,11 @@ import {
     signupWithGmailSchema,
     updatePasswordVerifyOTPSchema
 } from "./auth.validation.js";
-const router = Router();
+const router = Router({
+    caseSensitive: true,
+    strict: true,
+    mergeParams: true
+});
 
 
 

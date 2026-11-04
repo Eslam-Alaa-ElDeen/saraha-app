@@ -7,7 +7,11 @@ import { deleteMessage, getMessage, getMessages, sendMessage, sendMessageByAccou
 import { fileTypeValidation, localFileUpload } from "../../common/utils/multer/local.multer.js";
 import { deleteMessagesSchema, getMessageSchema, getMessagesSchema, sendMessageSchema } from "./message.validation.js";
 
-const router = Router();
+const router = Router({
+    caseSensitive: true,
+    strict: true,
+    mergeParams: true
+});
 
 router.get("/",authentication(TOKEN_TYPE.access),Validation(getMessagesSchema), async(req, res, next) => {
     const { dataInfo, ...messages } = await getMessages(req.query,req.user);
