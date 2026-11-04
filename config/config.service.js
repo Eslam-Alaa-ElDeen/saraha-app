@@ -33,3 +33,4 @@ export const APP_PASSWORD=process.env.APP_PASSWORD;
 export const APP_EMAIL=process.env.APP_EMAIL;
 export const PROJECT_NAME=process.env.PROJECT_NAME;
 
+export const ALLOWED_ORIGINS=process.env.ALLOWED_ORIGINS.split(",").map(origin=>origin.trim());
