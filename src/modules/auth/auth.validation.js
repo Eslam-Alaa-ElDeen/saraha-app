@@ -65,7 +65,7 @@ export const confirmEmailSchema = {
 
 export const resendOTPSchema = {
     body: joi.object({
-        otp:joi.string().length(6).required()
+        email:generalRules.email.required()
     })
         .unknown(false)
         .required()
@@ -88,6 +88,38 @@ export const updatePasswordVerifyOTPSchema = {
         email: generalRules.email.required(),
         otp:joi.string().length(6).required(),
         newPassword:generalRules.password.required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+
+
+export const sendOtpTwoFactorSchema = {
+    body: joi.object({
+        status:joi.number().valid(0,1).required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+
+export const confirmOtpTwoFactorSchema = {
+    body: joi.object({
+        otp:joi.string().length(6).required(),
+        status:joi.number().valid(0,1).required()
+    })
+        .unknown(false)
+        .required()
+        .label("Request body")
+        .messages(requestBodyMessages)
+};
+export const loginConfirmEmailTwoFactorAuthenticationSchema = {
+    body: joi.object({
+        otp:joi.string().length(6).required(),
+        email:generalRules.email.required()
     })
         .unknown(false)
         .required()

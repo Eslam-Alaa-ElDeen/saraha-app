@@ -21,12 +21,12 @@ export const limiter=rateLimit({
         try {
             const current = await client.incr(key);
             if(current === 1) {
-            await client.expire(key, 15 * 60);
+                await client.expire(key, 15 * 60);
             }
-            return current
+            return { totalHits: current };
         } catch (error) {
             console.log("Redis Error:"+error);
-            return 0;
+            return { totalHits: 0 };;
         }
         },
         async decrement(key) {

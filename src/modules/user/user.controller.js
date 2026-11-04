@@ -40,8 +40,7 @@ router.post("/logout",authentication(TOKEN_TYPE.access), async (req, res, next) 
     successResponse({
         res,
         status:201,
-        data:result,
-        message:"user logout successfully"
+        message:result?.message?result.message:"user logout successfully"
     })
 })
 

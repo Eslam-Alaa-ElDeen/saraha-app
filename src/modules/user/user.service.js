@@ -41,7 +41,7 @@ export const logout=async(user,payload,{actions=LogoutTypeEnum.ONE})=>{
             user.changeCredentialTime=Date.now()
             user.save()
             await deleteKey(await keys(userBaseRevokeTokenKey(payload)))
-            break;
+            return {message:"users logged out successfully"}
         default:
             return await createRevokeToken(payload)
             break;
@@ -52,5 +52,5 @@ export const uploadProfilePhoto=async(file,user)=>{
     user.image=file.finalPath
     await user.save()
 
-    return user;
+    return user.image;
 }

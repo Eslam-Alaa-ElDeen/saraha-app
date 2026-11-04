@@ -6,7 +6,7 @@ import { Compare, createToken, Hash,Decrypt, Encrypt, createLoginCredentials, us
 import { userModel } from "../../DB/model/index.js";
 import { ProviderEnum } from "../../common/enum/provider.enum.js";
 import {randomUUID}from "node:crypto"
-import { createOTP, otp_key, otp_key_prefix, otp_key_trails } from "../../common/utils/email/otp.js";
+import { createOTP, otp_key, otp_key_prefix, otp_key_prefix_action, otp_key_trails } from "../../common/utils/email/otp.js";
 import { eventEmitterEmail } from "../../common/events/event.email.js";
 import { sendEmail } from "../../common/utils/email/sendEmail.js";
 import { emailTemplate } from "../../common/utils/email/email.template.js";
@@ -14,34 +14,34 @@ import { deleteKey, expire, getValue, incr, keys, setValue, ttl } from "../../co
 
 const client=new OAuth2Client();
 
-const sendEmailOTP=async(email)=>{
+const sendEmailOTP=async(email, action)=>{
 
-  const ttlExist=await ttl(otp_key(email))
+  const ttlExist=await ttl(otp_key(email, action))
   if(ttlExist>0)
     throw ConflictException({message:`the old OTP is active to use ,you can resend a new OTP after ${ttlExist}`})
 
-  const trails=await getValue(otp_key_trails(email))
+  const trails=await getValue(otp_key_trails(email, action))
   if(trails>=3)
     throw TooManyRequestException({message:"You have made too many requests ,you blocked for 5 min"})
 
   const otp=createOTP()
   await setValue({
-    key:otp_key(email),
+    key:otp_key(email, action),
     value:await Hash(otp,SALT),
     ttl:300
   })
 
-  const currTrails=await incr(otp_key_trails(email))
+  const currTrails=await incr(otp_key_trails(email, action))
   if (currTrails === 1) {
       await expire({
-          key: otp_key_trails(email),
+          key: otp_key_trails(email, action),
           ttl: 300
       });
   }
 
   if (currTrails === 3) {
       await expire({
-          key: otp_key_trails(email),
+          key: otp_key_trails(email, action),
           ttl: 300
       });
   }
@@ -98,7 +98,7 @@ export const signup = async (inputs) => {
   if(existEmail)
     throw ConflictException({message:"email already exist go to login"})
 
-  await sendEmailOTP(inputs.email)
+  await sendEmailOTP(inputs.email, "ConfirmEmail")
 
   inputs.email=inputs.email.toLowerCase()
   const {userName,email,password,phone,gender,DOB}=inputs;
@@ -125,37 +125,41 @@ export const login = async (inputs,issuer) => {
 
   if(!matchPass)
     throw NotFoundException({message:"email or password not valid"})
-  
-    user.phone=await Decrypt(user.phone)
-    const jwtid=randomUUID();
-      const access_token=await createToken({
-          payload:{
-            user:{
-              sub:user._id
-            }
-          },
-          options:{
-            noTimestamp:false,
-            expiresIn:60*60,
-            issuer,
-            jwtid
-          }
-      })
 
-      const refresh_token=await createToken({
-          payload:{
-            user:{
-              sub:user._id
-            }
-          },
-          secret:REFRESH_TOKEN_SIGNATURE,
-          options:{
-            noTimestamp:false,
-            expiresIn:REFRESH_TOKEN_EXPIRES_IN,
-            issuer,
-            jwtid
-          }
-      })
+  if(user.isTwoFactorEnabled==1){
+    await sendEmailOTP(user.email,"TwoFactorAuthentication_login");
+    return {message:`otp send to ${inputs.email} write it to confirm and pass 2FA`}
+  }
+  user.phone=await Decrypt(user.phone)
+  const jwtid=randomUUID();
+  const access_token=await createToken({
+      payload:{
+        user:{
+          sub:user._id
+        }
+      },
+      options:{
+        noTimestamp:false,
+        expiresIn:60*60,
+        issuer,
+        jwtid
+      }
+  })
+
+  const refresh_token=await createToken({
+      payload:{
+        user:{
+          sub:user._id
+        }
+      },
+      secret:REFRESH_TOKEN_SIGNATURE,
+      options:{
+        noTimestamp:false,
+        expiresIn:REFRESH_TOKEN_EXPIRES_IN,
+        issuer,
+        jwtid
+      }
+  })
   return {access_token,refresh_token};
 };
 
@@ -170,7 +174,7 @@ export const confirmEmail=async({email,otp})=>{
   if(!user)
     throw BadRequestException({message:"the user not exists or already confirmed"})
 
-  const cipherOTP=await getValue(otp_key(email))
+  const cipherOTP=await getValue(otp_key(email, "ConfirmEmail"))
 
   if(cipherOTP==null || !await Compare(otp,cipherOTP))
     throw BadRequestException({message:"OTP is wrong or expired"})
@@ -193,7 +197,7 @@ export const resendOTP=async({email})=>{
   if(!user)
     throw BadRequestException({message:"the user not exists or already confirmed"})
 
-  await sendEmailOTP(email)
+  await sendEmailOTP(email, "ConfirmEmail")
 }
 
 export const forgetPasswordSendOTP=async({email})=>{
@@ -207,7 +211,7 @@ export const forgetPasswordSendOTP=async({email})=>{
   if(!user)
     throw BadRequestException({message:"the user not exists"})
 
-  await sendEmailOTP(email)
+  await sendEmailOTP(email, "ForgotPassword")
 }
 
 export const updatePasswordVerifyOTP=async({email,otp,newPassword})=>{
@@ -221,7 +225,7 @@ export const updatePasswordVerifyOTP=async({email,otp,newPassword})=>{
   if(!user)
     throw BadRequestException({message:"User not exists"})
 
-  const cipherOTP=await getValue(otp_key(email))
+  const cipherOTP=await getValue(otp_key(email, "ForgotPassword"))
 
   if(cipherOTP==null || !await Compare(otp,cipherOTP))
     throw BadRequestException({message:"OTP is wrong or expired"})
@@ -245,6 +249,46 @@ export const updatePasswordVerifyOTP=async({email,otp,newPassword})=>{
   return;
 }
 
+export const sendOtpTwoFactor=async(user,{status})=>{
+  if(  user.isTwoFactorEnabled==status)
+    throw BadRequestException({message:(status==1?"two factor authentication already active":"two factor authentication already not active")})
+
+  await sendEmailOTP(user.email,"TwoFactorAuthentication");
+}
+
+export const confirmOtpTwoFactor=async(user,{status,otp})=>{
+
+  const cipherOTP=await getValue(otp_key(user.email, "TwoFactorAuthentication"))
+
+  if(cipherOTP==null || !await Compare(otp,cipherOTP))
+    throw BadRequestException({message:"OTP is wrong or expired"})
+
+  await deleteKey(await keys(`${otp_key_prefix_action(user.email,"TwoFactorAuthentication")}`));
+
+  user.isTwoFactorEnabled=status
+  await user.save();
+}
+
+
+export const loginConfirmEmailTwoFactorAuthentication=async({otp,email},issuer)=>{
+  const user=await findOne({
+    model:userModel,
+    filter:{
+      email
+    }
+  })
+
+  if(!user)
+    throw BadRequestException({message:"the user not exists or already confirmed"})
+
+  const cipherOTP=await getValue(otp_key(user.email, "TwoFactorAuthentication_login"))
+
+  if(cipherOTP==null || !await Compare(otp,cipherOTP))
+    throw BadRequestException({message:"OTP is wrong or expired"})
+
+  await deleteKey(await keys(`${otp_key_prefix_action(user.email,"TwoFactorAuthentication_login")}`));
+  return await createLoginCredentials({user,issuer})
+}
 
 
 

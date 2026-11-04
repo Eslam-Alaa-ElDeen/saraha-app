@@ -1,16 +1,21 @@
 import { Router } from 'express'
-import {  confirmEmail, forgetPasswordSendOTP, login, resendOTP, signup, signupWithGmail, updatePasswordVerifyOTP } from './auth.service.js';
+import {  confirmEmail, confirmOtpTwoFactor, forgetPasswordSendOTP, login, loginConfirmEmailTwoFactorAuthentication, resendOTP, sendOtpTwoFactor, signup, signupWithGmail, updatePasswordVerifyOTP } from './auth.service.js';
 import { successResponse } from '../../common/utils/response/success.response.js';
 import { Validation } from "../../middleware/validation.middleware.js";
 import {
     confirmEmailSchema,
+    confirmOtpTwoFactorSchema,
     forgetPasswordSendOTPSchema,
+    loginConfirmEmailTwoFactorAuthenticationSchema,
     loginSchema,
     resendOTPSchema,
+    sendOtpTwoFactorSchema,
     signupSchema,
     signupWithGmailSchema,
     updatePasswordVerifyOTPSchema
 } from "./auth.validation.js";
+import { authentication } from '../../middleware/authentication.middleware.js';
+import { TOKEN_TYPE } from '../../common/enum/token.enum.js';
 const router = Router({
     caseSensitive: true,
     strict: true,
@@ -50,8 +55,8 @@ router.post("/login", Validation(loginSchema), async (req, res, next) => {
     successResponse({
         res,
         status:201,
-        data:result,
-        message:"user logged in successfully"
+        data:result.access_token?{access_token:result.access_token,refresh_token:result.refresh_token}:undefined,
+        message:result?.message?.length? result.message :"user logged in successfully"
     })
 })
 
@@ -93,10 +98,45 @@ router.patch("/update_password",Validation(updatePasswordVerifyOTPSchema),async(
 
     successResponse({
         res,
-        status:201,
+        status:200,
         data:result,
         message:"password updated successfully"
     })
+})
+
+router.post("/send-otp-two-factor",authentication(TOKEN_TYPE.access),Validation(sendOtpTwoFactorSchema),async(req,res,next)=>{
+    const result = await sendOtpTwoFactor(req.user,req.body)
+
+    successResponse({
+        res,
+        status:200,
+        data:result,
+        message:"send otp successfully"
+    })
+})
+
+router.patch("/confirm-otp-two-factor",authentication(TOKEN_TYPE.access),Validation(confirmOtpTwoFactorSchema),async(req,res,next)=>{
+    const result = await confirmOtpTwoFactor(req.user,req.body)
+
+    successResponse({
+        res,
+        status:200,
+        data:result,
+        message:"otp confirmed successfully"
+    })
+})
+
+router.post("/login-confirm-email-two-factor-authentication",
+    Validation(loginConfirmEmailTwoFactorAuthenticationSchema),
+    async(req,res,next)=>{
+        const result = await loginConfirmEmailTwoFactorAuthentication(req.body,`${req.protocol}://${req.host}`)
+
+        successResponse({
+            res,
+            status:200,
+            data:result,
+            message:"otp confirmed successfully"
+        })
 })
 
 export default router

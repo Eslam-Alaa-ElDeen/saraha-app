@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import { GenderEnum } from "../../common/enum/user.enum.js";
+import { GenderEnum, TwoFactor } from "../../common/enum/user.enum.js";
 import { RoleEnum } from "../../common/enum/role.enum.js";
 import { ProviderEnum } from "../../common/enum/provider.enum.js";
+
 
 const userSchema=new mongoose.Schema({
     firstName:{
@@ -48,7 +49,12 @@ const userSchema=new mongoose.Schema({
         enum:Object.values(ProviderEnum),
         default:ProviderEnum.SYSTEM
     },
-    changeCredentialTime:Date
+    changeCredentialTime:Date,
+    isTwoFactorEnabled:{
+        type:Number,
+        enum:Object.values(TwoFactor),
+        default:TwoFactor.Disenable
+    }
 },{
     timestamps:true,
     toObject:{virtuals:true},
