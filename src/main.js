@@ -6,6 +6,8 @@ import express from "express";
 import cors from "cors"
 import {  connectRedis } from "./DB/redis.connection.js";
 import helmet from "helmet";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+
 
 let corsOptions = {
   origin: function (origin, callback) {
@@ -17,10 +19,28 @@ let corsOptions = {
   }
 }
 
+const limiter=rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  handler: function (req, res,next) {
+    return res.status(429).json({
+      message: "Too many requests, please try again later."
+    });
+  },
+  keyGenerator: function (req, res) {
+    const ip=ipKeyGenerator(req.ip,52)
+    return `${ip}-${req.method}-${req.originalUrl}`;
+  },
+  legacyHeaders: false,
+  standardHeaders:true
+})
+
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(cors(corsOptions));
+app.use(limiter);
 app.use(helmet())
 
 await connectionDB()
