@@ -9,7 +9,7 @@
                     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚═╝     ╚═╝
 ```
 
-### 🕊️ Say it honestly. Stay anonymous. Stay secure.
+###  Say it honestly. Stay anonymous. Stay secure.
 
 **A security-first REST API for anonymous messaging and honest feedback.**
 
