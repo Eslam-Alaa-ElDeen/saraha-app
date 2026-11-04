@@ -7,6 +7,8 @@ import cors from "cors"
 import {  connectRedis } from "./DB/redis.connection.js";
 import helmet from "helmet";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import { client } from "./DB/redis.connection.js";
+import { BadRequestException, TooManyRequestException } from "./common/exception/error.exception.js";
 
 
 let corsOptions = {
@@ -32,7 +34,35 @@ const limiter=rateLimit({
     return `${ip}-${req.method}-${req.originalUrl}`;
   },
   legacyHeaders: false,
-  standardHeaders:true
+  standardHeaders:true,
+  store:{
+    async increment(key) {
+      try {
+        const current = await client.incr(key);
+        if(current === 1) {
+          await client.expire(key, 15 * 60);
+        }
+        return current
+      } catch (error) {
+        console.log("Redis Error:"+error);
+        return 0;
+      }
+    },
+    async decrement(key) {
+      try {
+        await client.decr(key);
+      } catch (error) {
+        console.log("Redis Error:"+error);
+      }
+    },
+    async resetKey(key) {
+      try {
+        await client.del(key);
+      } catch (error) {
+        console.log("Redis Error:"+error);
+      }
+    }
+  }
 })
 
 const app = express();
