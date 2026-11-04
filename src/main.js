@@ -1,4 +1,4 @@
-import { ALLOWED_ORIGINS, port } from "../config/config.service.js";
+import {  port } from "../config/config.service.js";
 import { connectionDB } from "./DB/connection.db.js";
 import { globalErrorHandling } from "./middleware/index.js";
 import { authRouter, messageRouter, userRouter } from "./modules/index.js";
@@ -6,64 +6,10 @@ import express from "express";
 import cors from "cors"
 import {  connectRedis } from "./DB/redis.connection.js";
 import helmet from "helmet";
-import rateLimit, { ipKeyGenerator } from "express-rate-limit";
-import { client } from "./DB/redis.connection.js";
-import { BadRequestException, TooManyRequestException } from "./common/exception/error.exception.js";
+import { limiter } from "./common/utils/limiter.js";
+import { corsOptions } from "./common/utils/corsOptions.js";
 
 
-let corsOptions = {
-  origin: function (origin, callback) {
-    if (ALLOWED_ORIGINS.includes(origin) || origin===undefined) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS & Unauthorized origin"), false);
-    }
-  }
-}
-
-const limiter=rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
-  handler: function (req, res,next) {
-    return res.status(429).json({
-      message: "Too many requests, please try again later."
-    });
-  },
-  keyGenerator: function (req, res) {
-    const ip=ipKeyGenerator(req.ip,52)
-    return `${ip}-${req.method}-${req.originalUrl}`;
-  },
-  legacyHeaders: false,
-  standardHeaders:true,
-  store:{
-    async increment(key) {
-      try {
-        const current = await client.incr(key);
-        if(current === 1) {
-          await client.expire(key, 15 * 60);
-        }
-        return current
-      } catch (error) {
-        console.log("Redis Error:"+error);
-        return 0;
-      }
-    },
-    async decrement(key) {
-      try {
-        await client.decr(key);
-      } catch (error) {
-        console.log("Redis Error:"+error);
-      }
-    },
-    async resetKey(key) {
-      try {
-        await client.del(key);
-      } catch (error) {
-        console.log("Redis Error:"+error);
-      }
-    }
-  }
-})
 
 const app = express();
 app.set("trust proxy", 1);
