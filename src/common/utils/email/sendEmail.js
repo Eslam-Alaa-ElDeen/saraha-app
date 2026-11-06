@@ -4,6 +4,8 @@ import { BadRequestException } from "../../exception/error.exception.js";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
+    port: 465,
+    secure: true,
     auth: {
         user: APP_EMAIL,
         pass:APP_PASSWORD
