@@ -15,7 +15,6 @@ export const sendEmail = async ({
         const apiKey = BREVO_API_KEY || process.env.BREVO_API_KEY;
         const recipientEmail = Array.isArray(to) ? to[0] : to;
 
-        // إرسال الطلب مباشرة لـ Brevo API عبر الـ HTTP (بدون حزم معقدة)
         const response = await fetch("https://api.brevo.com/v3/smtp/email", {
             method: "POST",
             headers: {
