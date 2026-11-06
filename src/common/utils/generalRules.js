@@ -6,6 +6,17 @@ import { RoleEnum } from "../enum/role.enum.js";
 const requiredMessage = "{#label} is required.";
 const stringMessage = "{#label} must be a string.";
 
+const ALLOWED_EMAIL_DOMAINS = new Set([
+    "gmail.com",
+    "outlook.com",
+    "hotmail.com",
+    "live.com",
+    "yahoo.com",
+    "icloud.com",
+    "proton.me",
+    "protonmail.com",
+]);
+
 export const generalRules = {
     email: joi
         .string()
@@ -13,13 +24,21 @@ export const generalRules = {
         .lowercase()
         .email({ minDomainSegments: 2 })
         .max(254)
+        .custom((value, helpers) => {
+            const domain = value.split("@").pop();
+            if (!ALLOWED_EMAIL_DOMAINS.has(domain)) {
+                return helpers.error("email.domain");
+            }
+            return value;
+        })
         .label("Email")
         .messages({
             "any.required": requiredMessage,
             "string.base": stringMessage,
             "string.empty": "Email cannot be empty.",
             "string.email": "Enter a valid email address.",
-            "string.max": "Email cannot exceed 254 characters."
+            "string.max": "Email cannot exceed 254 characters.",
+            "email.domain": "Use an email from Gmail, Outlook, Hotmail, Yahoo, iCloud or Proton."
         }),
     password: joi
         .string()
