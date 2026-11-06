@@ -15,7 +15,8 @@ const app = express();
 app.set("trust proxy", 1);
 
 app.use(express.json());
-app.use(cors());
+
+app.use(cors(corsOptions));
 app.use(limiter);
 app.use(helmet())
 

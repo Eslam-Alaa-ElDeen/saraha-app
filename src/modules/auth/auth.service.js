@@ -17,7 +17,7 @@ const client=new OAuth2Client();
 const sendEmailOTP=async(email, action)=>{
 
   const ttlExist=await ttl(otp_key(email, action))
-  if(ttlExist>0)
+  if(ttlExist>1)
     throw ConflictException({message:`the old OTP is active to use ,you can resend a new OTP after ${ttlExist}`})
 
   const trails=await getValue(otp_key_trails(email, action))
