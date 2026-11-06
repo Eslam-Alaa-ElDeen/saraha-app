@@ -31,6 +31,7 @@ export const REDIS_URI=process.env.REDIS_URI;
 
 export const APP_PASSWORD=process.env.APP_PASSWORD;
 export const APP_EMAIL=process.env.APP_EMAIL;
+export const BREVO_API_KEY=process.env.BREVO_API_KEY;
 export const PROJECT_NAME=process.env.PROJECT_NAME;
 
 export const ALLOWED_ORIGINS=process.env.ALLOWED_ORIGINS.split(",").map(origin=>origin.trim());
