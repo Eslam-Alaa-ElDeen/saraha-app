@@ -17,7 +17,8 @@ export const profile = async(user) => {
             }else{
                 return 'female'
             }
-        }()
+        }(),
+        image: user.image ?? null
     };
 }
 

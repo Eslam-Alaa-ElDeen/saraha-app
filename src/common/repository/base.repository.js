@@ -39,7 +39,9 @@ export const find = async ({ model, filter = {}, options = {} } = {}) => {
     }
 
     if (options?.sort) query.sort(options.sort);
-    if (options?.populate) query.populate(options.populate);
+    if (options?.populate) {
+        query.populate({ path: "senderId", select: "firstName lastName image" });
+    }
 
     const dataInfo={
         count,
